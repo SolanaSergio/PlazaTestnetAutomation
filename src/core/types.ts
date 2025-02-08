@@ -41,14 +41,20 @@ export interface Config {
     slippageTolerance: number;
 }
 
+export interface PoolInfo {
+    bondSupply: bigint;
+    levSupply: bigint;
+    poolReserves: bigint;
+    oracleDecimals: number;
+}
+
 export interface VaultState {
+    poolInfo: PoolInfo;
     totalValue: bigint;
-    bondEthSupply: bigint;
-    levEthSupply: bigint;
     collateralLevel: number;
-    currentPeriod: bigint;
-    lastDistribution: bigint;
+    periodProgress: number;
     distributionPeriod: bigint;
+    lastDistribution: bigint;
 }
 
 export interface TransactionStatus {

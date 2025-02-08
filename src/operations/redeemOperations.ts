@@ -4,6 +4,24 @@ import { handleError } from '../utils/helpers.js';
 import { getVaultState } from './vaultOperations.js';
 import { approveToken } from '../contracts/contractSetup.js';
 
+// Constants from pool contract documentation
+const PRECISION = 1_000_000; // 1e6 for fixed-point calculations
+const COLLATERAL_THRESHOLD = 1_200_000; // 120% in PRECISION format
+const BOND_TARGET_PRICE = ethers.parseUnits('100', 6); // 100 USDC
+
+async function getOraclePriceWithFallback(
+    oracleContract: ethers.Contract,
+    poolContract: ethers.Contract
+): Promise<bigint> {
+    try {
+        const { answer } = await oracleContract.latestRoundData();
+        return BigInt(answer.toString());
+    } catch (oracleError) {
+        console.log('Oracle error, using pool price as fallback');
+        return await poolContract.getTokenPrice(0); // 0 for bondETH type
+    }
+}
+
 export async function redeemBondEth(
     poolContract: ethers.Contract,
     bondEthContract: ethers.Contract,
@@ -16,9 +34,9 @@ export async function redeemBondEth(
     txHistory: TransactionStatus[]
 ): Promise<TransactionStatus> {
     try {
-        // Get ETH price from oracle using latestRoundData
-        const { answer } = await oracleContract.latestRoundData();
-        const ethPrice = BigInt(answer.toString());
+        // Get ETH price with fallback
+        const ethPrice = await getOraclePriceWithFallback(oracleContract, poolContract);
+        
         // Get current vault state
         const vaultState = await getVaultState(poolContract, ethPrice);
         
@@ -34,12 +52,12 @@ export async function redeemBondEth(
         if (proFormaCollateralLevel > 1.2) {
             // Lesser of 100 USDC or market price
             const marketPrice = await poolContract.getTokenPrice(TokenType.BOND);
-            redemptionPrice = marketPrice < ethers.parseUnits('100', 6) ? 
-                marketPrice : ethers.parseUnits('100', 6);
+            redemptionPrice = marketPrice < BOND_TARGET_PRICE ? 
+                marketPrice : BOND_TARGET_PRICE;
         } else {
             // 80% of vault's collateral value or market price (whichever is lower)
             const collateralValue = (vaultState.totalValue * BigInt(80)) / 
-                (vaultState.bondEthSupply * BigInt(100));
+                (vaultState.poolInfo.bondSupply * BigInt(100));
             const marketPrice = await poolContract.getTokenPrice(TokenType.BOND);
             redemptionPrice = collateralValue < marketPrice ? collateralValue : marketPrice;
         }
@@ -105,14 +123,14 @@ function calculateProFormaCollateralLevel(
 ): number {
     if (isBondToken) {
         // Calculate pro-forma collateral level for bondETH redemption
-        const bondValueRedeemed = redeemAmount * ethers.parseUnits('100', 6);
-        const remainingBondSupply = vaultState.bondEthSupply - redeemAmount;
+        const bondValueRedeemed = redeemAmount * BOND_TARGET_PRICE;
+        const remainingBondSupply = vaultState.poolInfo.bondSupply - redeemAmount;
         
         if (remainingBondSupply <= 0) return 999; // Max collateral level if no bonds left
         
         // ((ETH tokens × ETH price) - (bondETH redeemed × 100)) ÷ ((bondETH supply - bondETH redeemed) × 100)
         const proFormaCollateralLevel = Number(vaultState.totalValue - bondValueRedeemed) / 
-            Number(remainingBondSupply * ethers.parseUnits('100', 6));
+            Number(remainingBondSupply * BOND_TARGET_PRICE);
             
         return proFormaCollateralLevel;
     } else {
@@ -144,12 +162,12 @@ export async function redeemLevEth(
         let redemptionPrice: bigint;
         if (vaultState.collateralLevel > 1.2) {
             // (Total Value - (100 × bondETH supply)) ÷ levETH supply
-            redemptionPrice = (vaultState.totalValue - (vaultState.bondEthSupply * BigInt(100))) / 
-                vaultState.levEthSupply;
+            redemptionPrice = (vaultState.totalValue - (vaultState.poolInfo.bondSupply * BOND_TARGET_PRICE)) / 
+                vaultState.poolInfo.levSupply;
         } else {
             // 20% of vault's collateral value or market price (whichever is lower)
             const collateralValue = (vaultState.totalValue * BigInt(20)) / 
-                (vaultState.levEthSupply * BigInt(100));
+                (vaultState.poolInfo.levSupply * BigInt(100));
             const marketPrice = await poolContract.getTokenPrice(TokenType.LEVERAGE);
             redemptionPrice = collateralValue < marketPrice ? collateralValue : marketPrice;
         }

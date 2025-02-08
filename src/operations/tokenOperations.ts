@@ -4,6 +4,10 @@ import { TokenType, TransactionStatus, VaultState } from '../core/types.js';
 import { handleError } from '../utils/helpers.js';
 import { validateCreateParameters, validateRedeemParameters } from './poolOperations.js';
 
+// Constants from pool contract documentation
+const PRECISION = 1_000_000; // 1e6 for fixed-point calculations
+const COLLATERAL_THRESHOLD = 1_200_000; // 120% in PRECISION format
+const BOND_TARGET_PRICE = ethers.parseUnits('100', 6); // 100 USDC
 const SHARES_DECIMALS = 6;
 
 export async function getIndexedUserAmount(
@@ -230,12 +234,12 @@ export async function calculateBondEthPrice(
     const totalValue = vaultState.totalValue;
     
     if (collateralLevel > 1.2) {
-        // Fixed price at 100 USDC per bondETH
-        return ethers.parseUnits('100', 6);
+        // Fixed at 100 USDC if collateral level > 1.2
+        return BOND_TARGET_PRICE;
     } else {
         // 80% of vault's collateral value per bondETH
         const collateralValuePerBond = (totalValue * BigInt(80)) / 
-            (vaultState.bondEthSupply * BigInt(100));
+            (vaultState.poolInfo.bondSupply * BigInt(100));
         
         // Get market price for comparison
         const marketPrice = await poolContract.getTokenPrice(0); // 0 for bondETH
@@ -255,8 +259,8 @@ export async function calculateLevEthPrice(
     
     if (collateralLevel > 1.2) {
         // (Total Value - (100 × bondETH supply)) ÷ levETH supply
-        const bondValue = vaultState.bondEthSupply * ethers.parseUnits('100', 6);
-        const calculatedPrice = (totalValue - bondValue) / vaultState.levEthSupply;
+        const bondValue = vaultState.poolInfo.bondSupply * BOND_TARGET_PRICE;
+        const calculatedPrice = (totalValue - bondValue) / vaultState.poolInfo.levSupply;
         
         // Get market price for comparison
         const marketPrice = await poolContract.getTokenPrice(1); // 1 for levETH
@@ -266,7 +270,7 @@ export async function calculateLevEthPrice(
     } else {
         // 20% of vault's collateral value per levETH
         const collateralValuePerLev = (totalValue * BigInt(20)) / 
-            (vaultState.levEthSupply * BigInt(100));
+            (vaultState.poolInfo.levSupply * BigInt(100));
         
         // Get market price for comparison
         const marketPrice = await poolContract.getTokenPrice(1); // 1 for levETH
@@ -286,16 +290,16 @@ export async function calculateProFormaCollateralLevel(
     
     if (isBondToken) {
         // Calculate pro-forma collateral level for bondETH redemption
-        const bondValueRedeemed = redeemAmount * ethers.parseUnits('100', 6);
-        const remainingBondSupply = vaultState.bondEthSupply - redeemAmount;
+        const bondValueRedeemed = redeemAmount * BOND_TARGET_PRICE;
+        const remainingBondSupply = vaultState.poolInfo.bondSupply - redeemAmount;
         
         if (remainingBondSupply <= 0) return 999; // Max collateral level if no bonds left
         
         // ((ETH tokens × ETH price) - (bondETH redeemed × 100)) ÷ ((bondETH supply - bondETH redeemed) × 100)
-        const proFormaCollateralLevel = (totalCollateralValue - bondValueRedeemed) / 
-            (remainingBondSupply * ethers.parseUnits('100', 6));
+        const proFormaCollateralLevel = Number(totalCollateralValue - bondValueRedeemed) / 
+            Number(remainingBondSupply * BOND_TARGET_PRICE);
             
-        return Number(proFormaCollateralLevel);
+        return proFormaCollateralLevel;
     } else {
         // For levETH redemption, use current collateral level
         // This is correct as levETH redemptions don't affect the bond backing ratio

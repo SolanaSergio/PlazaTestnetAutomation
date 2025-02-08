@@ -41,10 +41,17 @@ class PlazaBot {
 
     async getVaultState(): Promise<VaultState> {
         try {
-            // Get ETH price from oracle using latestRoundData
-            const { answer } = await this.oracleContract.latestRoundData();
-            // Convert the answer to a positive bigint
-            const ethPrice = BigInt(answer.toString());
+            // Try to get ETH price from oracle
+            let ethPrice: bigint;
+            try {
+                const { answer } = await this.oracleContract.latestRoundData();
+                ethPrice = BigInt(answer.toString());
+            } catch (oracleError) {
+                // Fallback: Use getTokenPrice from pool contract
+                console.log('Oracle error, using pool price as fallback');
+                ethPrice = await this.poolContract.getTokenPrice(0); // 0 for bondETH type
+            }
+
             return await getVaultState(
                 this.poolContract,
                 ethPrice
@@ -66,7 +73,7 @@ class PlazaBot {
             ]);
 
             // Validate vault health
-            await validateVaultHealth(this.poolContract, vaultState);
+            validateVaultHealth(vaultState);
 
             // Format and display status
             const status = await formatVaultStatus(vaultState);

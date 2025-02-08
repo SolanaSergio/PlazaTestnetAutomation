@@ -4,6 +4,24 @@ import { handleError } from '../utils/helpers.js';
 import { getVaultState } from './vaultOperations.js';
 import { approveToken } from '../contracts/contractSetup.js';
 
+// Constants from pool contract documentation
+const PRECISION = 1_000_000; // 1e6 for fixed-point calculations
+const COLLATERAL_THRESHOLD = 1_200_000; // 120% in PRECISION format
+const BOND_TARGET_PRICE = ethers.parseUnits('100', 6); // 100 USDC
+
+async function getOraclePriceWithFallback(
+    oracleContract: ethers.Contract,
+    poolContract: ethers.Contract
+): Promise<bigint> {
+    try {
+        const { answer } = await oracleContract.latestRoundData();
+        return BigInt(answer.toString());
+    } catch (oracleError) {
+        console.log('Oracle error, using pool price as fallback');
+        return await poolContract.getTokenPrice(0); // 0 for bondETH type
+    }
+}
+
 export async function swapUsdcForLevEth(
     poolContract: ethers.Contract,
     usdcContract: ethers.Contract,
@@ -24,24 +42,25 @@ export async function swapUsdcForLevEth(
             throw new Error(`Insufficient USDC balance. Required: ${ethers.formatUnits(usdcAmount, 6)}, Available: ${ethers.formatUnits(usdcBalance, 6)}`);
         }
 
-        // Get ETH price from oracle using latestRoundData
-        const { answer } = await oracleContract.latestRoundData();
-        const ethPrice = BigInt(answer.toString());
-        // 2. Get vault state to check conditions
-        const vaultState = await getVaultState(poolContract, ethPrice);
-        if (vaultState.collateralLevel < 1.0) {
-            throw new Error('Cannot create levETH when collateral level is below 1.0');
-        }
+        // 2. Get current vault state and prices
+        const [bondSupply, levSupply, poolReserves] = await Promise.all([
+            poolContract.getBondSupply(),
+            poolContract.getLeverageSupply(),
+            poolContract.getReserve()
+        ]);
 
-        // 3. Calculate expected levETH output
-        const levEthPrice = vaultState.collateralLevel > 1.2 ?
-            (vaultState.totalValue - (vaultState.bondEthSupply * BigInt(100))) / vaultState.levEthSupply :
-            (vaultState.totalValue * BigInt(20)) / (vaultState.levEthSupply * BigInt(100));
+        // 3. Get ETH price from oracle
+        const { answer: ethPriceRaw } = await oracleContract.latestRoundData();
+        const ethPrice = BigInt(ethPriceRaw.toString());
 
-        const expectedLevEth = (usdcAmount * ethers.parseEther('1')) / levEthPrice;
+        // 4. Simulate creation to get expected output
+        const expectedLevEth = await poolContract.simulateCreate(TokenType.LEVERAGE, usdcAmount);
+        console.log(`Simulated levETH output: ${ethers.formatEther(expectedLevEth)}`);
+
+        // 5. Apply slippage tolerance to get minimum output
         const minAmountOut = (expectedLevEth * BigInt(10000 - slippageTolerance)) / BigInt(10000);
 
-        // 4. Check creation limits
+        // 6. Check creation limits
         const minCreation = await poolContract.getMinCreationAmount();
         const maxCreation = await poolContract.getMaxCreationAmount();
         if (minAmountOut < minCreation) {
@@ -51,15 +70,13 @@ export async function swapUsdcForLevEth(
             throw new Error(`Amount too large. Maximum creation amount: ${ethers.formatEther(maxCreation)} levETH`);
         }
 
-        // 5. Approve USDC spending if needed
+        // 7. Approve USDC spending if needed
         const poolAddress = await poolContract.getAddress();
         await approveToken(usdcContract, poolAddress, usdcAmount);
 
-        // 6. Execute swap
-        console.log(`Swapping ${ethers.formatUnits(usdcAmount, 6)} USDC for levETH...`);
-        console.log(`Expected minimum output: ${ethers.formatEther(minAmountOut)} levETH`);
-        console.log(`Current collateral level: ${(vaultState.collateralLevel * 100).toFixed(2)}%`);
-        console.log(`Current levETH price: ${ethers.formatUnits(levEthPrice, 6)} USDC`);
+        // 8. Execute creation
+        console.log(`Creating levETH with ${ethers.formatUnits(usdcAmount, 6)} USDC...`);
+        console.log(`Minimum output: ${ethers.formatEther(minAmountOut)} levETH`);
 
         const deadline = BigInt(Math.floor(Date.now() / 1000) + 3600); // 1 hour deadline
         const tx = await poolContract.create(
@@ -127,8 +144,8 @@ export async function swapUsdcForBondEth(
 
         // 3. Calculate expected bondETH output based on collateral level
         const bondEthPrice = vaultState.collateralLevel > 1.2 ?
-            BigInt(100) * ethers.parseUnits('1', 6) : // Fixed at 100 USDC if collateral level > 1.2
-            (vaultState.totalValue * BigInt(80)) / (vaultState.bondEthSupply * BigInt(100)); // 80% of collateral value
+            BOND_TARGET_PRICE : // Fixed at 100 USDC if collateral level > 1.2
+            (vaultState.totalValue * BigInt(80)) / (vaultState.poolInfo.bondSupply * BigInt(100)); // 80% of collateral value
         const expectedBondEth = (usdcAmount * ethers.parseEther('1')) / bondEthPrice;
         const minAmountOut = (expectedBondEth * BigInt(10000 - slippageTolerance)) / BigInt(10000);
 
@@ -221,8 +238,8 @@ export async function swapWstethForLevEth(
         const wstethValue = (amountIn * wstethPrice) / ethers.parseEther('1');
         
         const levEthPrice = vaultState.collateralLevel > 1.2 ?
-            (vaultState.totalValue - (vaultState.bondEthSupply * BigInt(100))) / vaultState.levEthSupply :
-            (vaultState.totalValue * BigInt(20)) / (vaultState.levEthSupply * BigInt(100));
+            (vaultState.totalValue - (vaultState.poolInfo.bondSupply * BOND_TARGET_PRICE)) / vaultState.poolInfo.levSupply :
+            (vaultState.totalValue * BigInt(20)) / (vaultState.poolInfo.levSupply * BigInt(100));
 
         const expectedLevEth = (wstethValue * ethers.parseEther('1')) / levEthPrice;
         const minAmountOut = (expectedLevEth * BigInt(10000 - slippageTolerance)) / BigInt(10000);
