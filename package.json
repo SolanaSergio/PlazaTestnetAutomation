@@ -1,0 +1,30 @@
+{
+  "name": "plaza-bot",
+  "version": "1.0.0",
+  "description": "Plaza Finance automation bot",
+  "main": "dist/cli.js",
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "start": "npm run build && node dist/cli.js start",
+    "status": "npm run build && node dist/cli.js status",
+    "swap": "npm run build && node dist/cli.js swap",
+    "claim": "npm run build && node dist/cli.js claim",
+    "dev": "ts-node-esm src/cli.ts",
+    "clean": "rimraf dist",
+    "prebuild": "npm run clean"
+  },
+  "dependencies": {
+    "chalk": "^5.3.0",
+    "commander": "^11.1.0",
+    "dotenv": "^16.3.1",
+    "ethers": "^6.9.0",
+    "ora": "^7.0.1"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.4",
+    "rimraf": "^5.0.10",
+    "ts-node": "^10.9.1",
+    "typescript": "^5.3.3"
+  }
+}

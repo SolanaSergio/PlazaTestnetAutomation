@@ -1,0 +1,175 @@
+Distributor
+This contract manages the distribution of coupon shares to users based on their bond token balances.
+
+State Variables
+GOV_ROLE
+Role identifier for accounts with governance privileges
+
+Copy
+bytes32 public constant GOV_ROLE = keccak256("GOV_ROLE");
+pool
+Pool address
+
+Copy
+Pool public pool;
+couponAmountToDistribute
+Coupon token total amount to be distributed
+
+Copy
+uint256 public couponAmountToDistribute;
+Functions
+constructor
+Note: oz-upgrades-unsafe-allow: constructor
+
+Copy
+constructor();
+initialize
+Initializes the contract with the governance address and sets up roles. This function is called once during deployment or upgrading to initialize state variables.
+
+Copy
+function initialize(address _governance, address _pool) public initializer;
+Parameters
+
+Name
+Type
+Description
+_governance
+
+address
+
+Address of the governance account that will have the GOV_ROLE.
+
+_pool
+
+address
+
+claim
+Allows a user to claim their shares from a specific pool. Calculates the number of shares based on the user's bond token balance and the shares per token. Transfers the calculated shares to the user's address.
+
+Copy
+function claim() external whenNotPaused nonReentrant;
+allocate
+Allocates shares to a pool.
+
+Copy
+function allocate(uint256 _amountToDistribute) external whenNotPaused;
+Parameters
+
+Name
+Type
+Description
+_amountToDistribute
+
+uint256
+
+Amount of shares to allocate.
+
+grantRole
+*Grants role to account. If account had not been already granted role, emits a {RoleGranted} event. Requirements:
+
+the caller must have role's admin role.*
+
+Copy
+function grantRole(bytes32 role, address account) public virtual override onlyRole(GOV_ROLE);
+Parameters
+
+Name
+Type
+Description
+role
+
+bytes32
+
+The role to grant
+
+account
+
+address
+
+The account to grant the role to
+
+revokeRole
+*Revokes role from account. If account had been granted role, emits a {RoleRevoked} event. Requirements:
+
+the caller must have role's admin role.*
+
+Copy
+function revokeRole(bytes32 role, address account) public virtual override onlyRole(GOV_ROLE);
+Parameters
+
+Name
+Type
+Description
+role
+
+bytes32
+
+The role to revoke
+
+account
+
+address
+
+The account to revoke the role from
+
+pause
+*Pauses all contract functions except for upgrades. Requirements:
+
+the caller must have the GOV_ROLE.*
+
+Copy
+function pause() external onlyRole(GOV_ROLE);
+unpause
+*Unpauses all contract functions. Requirements:
+
+the caller must have the GOV_ROLE.*
+
+Copy
+function unpause() external onlyRole(GOV_ROLE);
+Events
+ClaimedShares
+Event emitted when a user claims their shares
+
+Copy
+event ClaimedShares(address user, uint256 period, uint256 shares);
+PoolRegistered
+Event emitted when a new pool is registered
+
+Copy
+event PoolRegistered(address pool, address couponToken);
+Errors
+NotEnoughSharesBalance
+Error thrown when there are not enough shares in the contract's balance
+
+Copy
+error NotEnoughSharesBalance();
+UnsupportedPool
+Error thrown when an unsupported pool is accessed
+
+Copy
+error UnsupportedPool();
+NotEnoughSharesToDistribute
+Error thrown when there are not enough shares allocated to distribute
+
+Copy
+error NotEnoughSharesToDistribute();
+NotEnoughCouponBalance
+Error thrown when there are not enough coupon tokens in the contract's balance
+
+Copy
+error NotEnoughCouponBalance();
+PoolAlreadyRegistered
+Error thrown when attempting to register an already registered pool
+
+Copy
+error PoolAlreadyRegistered();
+InvalidPoolAddress
+Error thrown when the pool has an invalid address
+
+Copy
+error InvalidPoolAddress();
+CallerIsNotPool
+error thrown when the caller is not the pool
+
+Copy
+error CallerIsNotPool();

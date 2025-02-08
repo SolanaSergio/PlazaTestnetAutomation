@@ -1,0 +1,1239 @@
+Pool
+This contract manages a pool of assets, allowing for the creation and redemption of bond and leverage tokens. It also handles distribution periods and interacts with an oracle for price information.
+
+The Pool is the core contract for the Plaza protocol. The pool holds all underlying assets for a particular set of programmable derivatives and handles the issuance and burn of all programmable derivatives related to its specific strategy or underlying. The first pool on Plaza has a mix of Ethereum liquid staking and liquid restaking tokens as the underlying assets and splits the total return of those ETH-related assets into two products targeted at different investor profiles, bondETH - a stabilized profile that received a coupon in USDC every quarter, and levETH - levered exposure to ETH. In this case, the pool contract holds all the ETH-related assets and issues the bondETH and levETH tokens.
+
+Inherits: Initializable, PausableUpgradeable, ReentrancyGuardUpgradeable, OracleReader, Validator
+
+State Variables
+POINT_EIGHT
+Copy
+uint256 private constant POINT_EIGHT = 800000;
+POINT_TWO
+Copy
+uint256 private constant POINT_TWO = 200000;
+COLLATERAL_THRESHOLD
+Copy
+uint256 private constant COLLATERAL_THRESHOLD = 1200000;
+PRECISION
+Copy
+uint256 private constant PRECISION = 1000000;
+BOND_TARGET_PRICE
+Copy
+uint256 private constant BOND_TARGET_PRICE = 100;
+COMMON_DECIMALS
+Copy
+uint8 private constant COMMON_DECIMALS = 18;
+SECONDS_PER_YEAR
+Copy
+uint256 private constant SECONDS_PER_YEAR = 365 days;
+MIN_LIQUIDATION_THRESHOLD
+Copy
+uint256 private constant MIN_LIQUIDATION_THRESHOLD = 90;
+poolFactory
+Pool factory contract
+
+Copy
+PoolFactory public poolFactory;
+fee
+Fee amount
+
+Copy
+uint256 private fee;
+feeBeneficiary
+Fee beneficiary address
+
+Copy
+address public feeBeneficiary;
+lastFeeClaimTime
+Last fee claim time
+
+Copy
+uint256 private lastFeeClaimTime;
+liquidationThreshold
+Liquidation threshold denoting the maximum percentage of reserve tokens that can be sold in an auction.
+
+Copy
+uint256 private liquidationThreshold;
+reserveToken
+Reserve token address
+
+Copy
+address public reserveToken;
+bondToken
+Bond token contract
+
+Copy
+BondToken public bondToken;
+lToken
+Leverage token contract
+
+Copy
+LeverageToken public lToken;
+couponToken
+Coupon token address
+
+Copy
+address public couponToken;
+sharesPerToken
+Shares per bond token
+
+Copy
+uint256 private sharesPerToken;
+distributionPeriod
+Distribution period in seconds
+
+Copy
+uint256 private distributionPeriod;
+auctionPeriod
+Auction period in seconds
+
+Copy
+uint256 private auctionPeriod;
+lastDistribution
+Last distribution timestamp in seconds
+
+Copy
+uint256 private lastDistribution;
+auctions
+Mapping to store auction addresses by their index
+
+Copy
+mapping(uint256 => address) public auctions;
+Functions
+constructor
+Note: oz-upgrades-unsafe-allow: constructor
+
+Copy
+constructor();
+initialize
+Initializes the contract with the given parameters.
+
+Copy
+function initialize(
+    address _poolFactory,
+    uint256 _fee,
+    address _reserveToken,
+    address _dToken,
+    address _lToken,
+    address _couponToken,
+    uint256 _sharesPerToken,
+    uint256 _distributionPeriod,
+    address _feeBeneficiary,
+    address _oracleFeeds
+) public initializer;
+Parameters
+
+Name
+Type
+Description
+_poolFactory
+
+address
+
+Address of the pool factory contract.
+
+_fee
+
+uint256
+
+Fee percentage for the pool.
+
+_reserveToken
+
+address
+
+Address of the reserve token.
+
+_dToken
+
+address
+
+Address of the bond token.
+
+_lToken
+
+address
+
+Address of the leverage token.
+
+_couponToken
+
+address
+
+Address of the coupon token.
+
+_sharesPerToken
+
+uint256
+
+Initial shares per bond per distribution period.
+
+_distributionPeriod
+
+uint256
+
+Initial distribution period in seconds.
+
+_feeBeneficiary
+
+address
+
+_oracleFeeds
+
+address
+
+Address of the OracleFeeds contract.
+
+setLiquidationThreshold
+Sets the liquidation threshold. Cannot be set below 90%.
+
+Copy
+function setLiquidationThreshold(uint256 _liquidationThreshold) external onlyRole(poolFactory.GOV_ROLE());
+Parameters
+
+Name
+Type
+Description
+_liquidationThreshold
+
+uint256
+
+The new liquidation threshold value.
+
+create
+Creates new tokens by depositing reserve tokens.
+
+Copy
+function create(TokenType tokenType, uint256 depositAmount, uint256 minAmount)
+    external
+    whenNotPaused
+    nonReentrant
+    returns (uint256);
+Parameters
+
+Name
+Type
+Description
+tokenType
+
+TokenType
+
+The type of token to create (BOND or LEVERAGE).
+
+depositAmount
+
+uint256
+
+The amount of reserve tokens to deposit.
+
+minAmount
+
+uint256
+
+The minimum amount of new tokens to receive.
+
+Returns
+
+Name
+Type
+Description
+<none>
+
+uint256
+
+amount of new tokens created.
+
+create
+Creates new tokens by depositing reserve tokens, with additional parameters for deadline and onBehalfOf for router support.
+
+Copy
+function create(TokenType tokenType, uint256 depositAmount, uint256 minAmount, uint256 deadline, address onBehalfOf)
+    external
+    whenNotPaused
+    nonReentrant
+    checkDeadline(deadline)
+    returns (uint256);
+Parameters
+
+Name
+Type
+Description
+tokenType
+
+TokenType
+
+The type of token to create (BOND or LEVERAGE).
+
+depositAmount
+
+uint256
+
+The amount of reserve tokens to deposit.
+
+minAmount
+
+uint256
+
+The minimum amount of new tokens to receive.
+
+deadline
+
+uint256
+
+The deadline timestamp in seconds for the transaction to be executed.
+
+onBehalfOf
+
+address
+
+The address to receive the new tokens.
+
+Returns
+
+Name
+Type
+Description
+<none>
+
+uint256
+
+The amount of new tokens created.
+
+_create
+Creates new tokens by depositing reserve tokens, with additional parameters for deadline and onBehalfOf for router support.
+
+Copy
+function _create(TokenType tokenType, uint256 depositAmount, uint256 minAmount, address onBehalfOf)
+    private
+    returns (uint256);
+Parameters
+
+Name
+Type
+Description
+tokenType
+
+TokenType
+
+The type of token to create (BOND or LEVERAGE).
+
+depositAmount
+
+uint256
+
+The amount of reserve tokens to deposit.
+
+minAmount
+
+uint256
+
+The minimum amount of new tokens to receive.
+
+onBehalfOf
+
+address
+
+The address to receive the new tokens.
+
+Returns
+
+Name
+Type
+Description
+<none>
+
+uint256
+
+The amount of new tokens created.
+
+simulateCreate
+Simulates the creation of new tokens without actually minting them.
+
+Copy
+function simulateCreate(TokenType tokenType, uint256 depositAmount) public view returns (uint256);
+Parameters
+
+Name
+Type
+Description
+tokenType
+
+TokenType
+
+The type of token to simulate creating (BOND or LEVERAGE).
+
+depositAmount
+
+uint256
+
+The amount of reserve tokens to simulate depositing.
+
+Returns
+
+Name
+Type
+Description
+<none>
+
+uint256
+
+amount of new tokens that would be created.
+
+getCreateAmount
+Calculates the amount of new tokens to create based on the current pool state and oracle price.
+
+Copy
+function getCreateAmount(
+    TokenType tokenType,
+    uint256 depositAmount,
+    uint256 bondSupply,
+    uint256 levSupply,
+    uint256 poolReserves,
+    uint256 ethPrice,
+    uint8 oracleDecimals
+) public pure returns (uint256);
+Parameters
+
+Name
+Type
+Description
+tokenType
+
+TokenType
+
+The type of token to create (BOND or LEVERAGE).
+
+depositAmount
+
+uint256
+
+The amount of reserve tokens to deposit.
+
+bondSupply
+
+uint256
+
+The current supply of bond tokens.
+
+levSupply
+
+uint256
+
+The current supply of leverage tokens.
+
+poolReserves
+
+uint256
+
+The current amount of reserve tokens in the pool.
+
+ethPrice
+
+uint256
+
+The current ETH price from the oracle.
+
+oracleDecimals
+
+uint8
+
+The number of decimals used by the oracle.
+
+Returns
+
+Name
+Type
+Description
+<none>
+
+uint256
+
+amount of new tokens to create.
+
+redeem
+Redeems tokens for reserve tokens.
+
+Copy
+function redeem(TokenType tokenType, uint256 depositAmount, uint256 minAmount)
+    public
+    whenNotPaused
+    nonReentrant
+    returns (uint256);
+Parameters
+
+Name
+Type
+Description
+tokenType
+
+TokenType
+
+The type of derivative token to redeem (BOND or LEVERAGE).
+
+depositAmount
+
+uint256
+
+The amount of derivative tokens to redeem.
+
+minAmount
+
+uint256
+
+The minimum amount of reserve tokens to receive.
+
+Returns
+
+Name
+Type
+Description
+<none>
+
+uint256
+
+amount of reserve tokens received.
+
+redeem
+Redeems tokens for reserve tokens, with additional parameters.
+
+Copy
+function redeem(TokenType tokenType, uint256 depositAmount, uint256 minAmount, uint256 deadline, address onBehalfOf)
+    external
+    whenNotPaused
+    nonReentrant
+    checkDeadline(deadline)
+    returns (uint256);
+Parameters
+
+Name
+Type
+Description
+tokenType
+
+TokenType
+
+The type of derivative token to redeem (BOND or LEVERAGE).
+
+depositAmount
+
+uint256
+
+The amount of derivative tokens to redeem.
+
+minAmount
+
+uint256
+
+The minimum amount of reserve tokens to receive.
+
+deadline
+
+uint256
+
+The deadline timestamp in seconds for the transaction to be executed.
+
+onBehalfOf
+
+address
+
+The address to receive the reserve tokens.
+
+Returns
+
+Name
+Type
+Description
+<none>
+
+uint256
+
+amount of reserve tokens received.
+
+_redeem
+Redeems tokens for reserve tokens, with additional parameters.
+
+Copy
+function _redeem(TokenType tokenType, uint256 depositAmount, uint256 minAmount, address onBehalfOf)
+    private
+    returns (uint256);
+Parameters
+
+Name
+Type
+Description
+tokenType
+
+TokenType
+
+The type of derivative token to redeem (BOND or LEVERAGE).
+
+depositAmount
+
+uint256
+
+The amount of derivative tokens to redeem.
+
+minAmount
+
+uint256
+
+The minimum amount of reserve tokens to receive.
+
+onBehalfOf
+
+address
+
+The address to receive the reserve tokens.
+
+Returns
+
+Name
+Type
+Description
+<none>
+
+uint256
+
+amount of reserve tokens received.
+
+simulateRedeem
+Simulates the redemption of tokens without actually burning them.
+
+Copy
+function simulateRedeem(TokenType tokenType, uint256 depositAmount) public view returns (uint256);
+Parameters
+
+Name
+Type
+Description
+tokenType
+
+TokenType
+
+The type of derivative token to simulate redeeming (BOND or LEVERAGE).
+
+depositAmount
+
+uint256
+
+The amount of derivative tokens to simulate redeeming.
+
+Returns
+
+Name
+Type
+Description
+<none>
+
+uint256
+
+amount of reserve tokens that would be received.
+
+getRedeemAmount
+Calculates the amount of reserve tokens to be redeemed for a given amount of bond or leverage tokens.
+
+Copy
+function getRedeemAmount(
+    TokenType tokenType,
+    uint256 depositAmount,
+    uint256 bondSupply,
+    uint256 levSupply,
+    uint256 poolReserves,
+    uint256 ethPrice,
+    uint8 oracleDecimals
+) public pure returns (uint256);
+Parameters
+
+Name
+Type
+Description
+tokenType
+
+TokenType
+
+The type of derivative token being redeemed (BOND or LEVERAGE).
+
+depositAmount
+
+uint256
+
+The amount of derivative tokens being redeemed.
+
+bondSupply
+
+uint256
+
+The total supply of bond tokens.
+
+levSupply
+
+uint256
+
+The total supply of leverage tokens.
+
+poolReserves
+
+uint256
+
+The total amount of reserve tokens in the pool.
+
+ethPrice
+
+uint256
+
+The current ETH price from the oracle.
+
+oracleDecimals
+
+uint8
+
+The number of decimals used by the oracle.
+
+Returns
+
+Name
+Type
+Description
+<none>
+
+uint256
+
+amount of reserve tokens to be redeemed.
+
+startAuction
+Starts an auction for the current period.
+
+Copy
+function startAuction() external;
+transferReserveToAuction
+Transfers reserve tokens to the current auction.
+
+Copy
+function transferReserveToAuction(uint256 amount) external virtual;
+Parameters
+
+Name
+Type
+Description
+amount
+
+uint256
+
+The amount of reserve tokens to transfer.
+
+distribute
+Distributes coupon tokens to bond token holders. Can only be called after the distribution period has passed.
+
+Copy
+function distribute() external whenNotPaused;
+getPoolInfo
+Returns the current pool information.
+
+Copy
+function getPoolInfo() external view returns (PoolInfo memory info);
+Returns
+
+Name
+Type
+Description
+info
+
+PoolInfo
+
+A struct containing various pool parameters and balances.
+
+setDistributionPeriod
+Sets the distribution period.
+
+Copy
+function setDistributionPeriod(uint256 _distributionPeriod) external NotInAuction onlyRole(poolFactory.GOV_ROLE());
+Parameters
+
+Name
+Type
+Description
+_distributionPeriod
+
+uint256
+
+The new distribution period.
+
+setAuctionPeriod
+Sets the auction period.
+
+Copy
+function setAuctionPeriod(uint256 _auctionPeriod) external NotInAuction onlyRole(poolFactory.GOV_ROLE());
+Parameters
+
+Name
+Type
+Description
+_auctionPeriod
+
+uint256
+
+The new auction period.
+
+setSharesPerToken
+Sets the shares per token.
+
+Copy
+function setSharesPerToken(uint256 _sharesPerToken) external NotInAuction onlyRole(poolFactory.GOV_ROLE());
+Parameters
+
+Name
+Type
+Description
+_sharesPerToken
+
+uint256
+
+The new shares per token value.
+
+setFee
+Sets the fee for the pool.
+
+Copy
+function setFee(uint256 _fee) external onlyRole(poolFactory.GOV_ROLE());
+Parameters
+
+Name
+Type
+Description
+_fee
+
+uint256
+
+The new fee value.
+
+setFeeBeneficiary
+Sets the fee beneficiary for the pool.
+
+Copy
+function setFeeBeneficiary(address _feeBeneficiary) external onlyRole(poolFactory.GOV_ROLE());
+Parameters
+
+Name
+Type
+Description
+_feeBeneficiary
+
+address
+
+The address of the new fee beneficiary.
+
+claimFees
+Allows the fee beneficiary to claim the accumulated protocol fees.
+
+Copy
+function claimFees() public nonReentrant;
+getFeeAmount
+Returns the amount of fees to be claimed.
+
+Copy
+function getFeeAmount() internal view returns (uint256);
+Returns
+
+Name
+Type
+Description
+<none>
+
+uint256
+
+The amount of fees to be claimed.
+
+pause
+Pauses the contract. Reverts any interaction except upgrade.
+
+Copy
+function pause() external onlyRole(poolFactory.GOV_ROLE());
+unpause
+Unpauses the contract.
+
+Copy
+function unpause() external onlyRole(poolFactory.GOV_ROLE());
+onlyRole
+Modifier to check if the caller has the specified role.
+
+Copy
+modifier onlyRole(bytes32 role);
+Parameters
+
+Name
+Type
+Description
+role
+
+bytes32
+
+The role to check for.
+
+NotInAuction
+Modifier to prevent a function from being called during an ongoing auction.
+
+Copy
+modifier NotInAuction();
+Events
+SharesPerTokenChanged
+Emitted when the shares per token value is changed.
+
+Copy
+event SharesPerTokenChanged(uint256 sharesPerToken);
+Parameters
+
+Name
+Type
+Description
+sharesPerToken
+
+uint256
+
+New shares per token value
+
+Distributed
+Emitted when the distribution period is over and the shares have been distributed to the distributor.
+
+Copy
+event Distributed(uint256 amount, address distributor);
+Parameters
+
+Name
+Type
+Description
+amount
+
+uint256
+
+Amount of distributed tokens
+
+distributor
+
+address
+
+Address of the distributor
+
+AuctionPeriodChanged
+Emitted when the auction period is changed.
+
+Copy
+event AuctionPeriodChanged(uint256 oldPeriod, uint256 newPeriod);
+Parameters
+
+Name
+Type
+Description
+oldPeriod
+
+uint256
+
+Old auction period
+
+newPeriod
+
+uint256
+
+New auction period
+
+DistributionRollOver
+Emitted when the distribution period is rolled over. This happens when the auction did not acquire the required amount of coupon tokens for the corresponding number of underlying assets.
+
+Copy
+event DistributionRollOver(uint256 period, uint256 sharesPerToken);
+Parameters
+
+Name
+Type
+Description
+period
+
+uint256
+
+Distribution period
+
+sharesPerToken
+
+uint256
+
+Shares per token
+
+DistributionPeriodChanged
+Emitted when the distribution period is changed.
+
+Copy
+event DistributionPeriodChanged(uint256 oldPeriod, uint256 newPeriod);
+Parameters
+
+Name
+Type
+Description
+oldPeriod
+
+uint256
+
+Old distribution period
+
+newPeriod
+
+uint256
+
+New distribution period
+
+TokensCreated
+Emitted when new Plaza derivatives are created.
+
+Copy
+event TokensCreated(
+    address caller, address onBehalfOf, TokenType tokenType, uint256 depositedAmount, uint256 mintedAmount
+);
+Parameters
+
+Name
+Type
+Description
+caller
+
+address
+
+Address of the caller
+
+onBehalfOf
+
+address
+
+Address of the recipient, if not the caller
+
+tokenType
+
+TokenType
+
+Type of the token created
+
+depositedAmount
+
+uint256
+
+Amount of deposited underlying tokens
+
+mintedAmount
+
+uint256
+
+Amount of minted tokens
+
+TokensRedeemed
+Emitted when Plaza derivatives are redeemed.
+
+Copy
+event TokensRedeemed(
+    address caller, address onBehalfOf, TokenType tokenType, uint256 depositedAmount, uint256 redeemedAmount
+);
+Parameters
+
+Name
+Type
+Description
+caller
+
+address
+
+Address of the caller
+
+onBehalfOf
+
+address
+
+Address of the recipient, if not the caller
+
+tokenType
+
+TokenType
+
+Type of the token to redeem for
+
+depositedAmount
+
+uint256
+
+Amount of deposited underlying tokens
+
+redeemedAmount
+
+uint256
+
+Amount of redeemed tokens
+
+FeeClaimed
+Emitted when fees are claimed.
+
+Copy
+event FeeClaimed(address beneficiary, uint256 amount);
+Parameters
+
+Name
+Type
+Description
+beneficiary
+
+address
+
+Address of the beneficiary
+
+amount
+
+uint256
+
+Amount of claimed fees
+
+FeeChanged
+Emitted when the fee amount is changed.
+
+Copy
+event FeeChanged(uint256 oldFee, uint256 newFee);
+Parameters
+
+Name
+Type
+Description
+oldFee
+
+uint256
+
+Old fee value
+
+newFee
+
+uint256
+
+New fee value
+
+LiquidationThresholdChanged
+Emitted when the liquidation threshold is changed.
+
+Copy
+event LiquidationThresholdChanged(uint256 oldThreshold, uint256 newThreshold);
+Parameters
+
+Name
+Type
+Description
+oldThreshold
+
+uint256
+
+Old liquidation threshold value
+
+newThreshold
+
+uint256
+
+New liquidation threshold value
+
+Errors
+MinAmount
+Error thrown when amount is below minimum required
+
+Copy
+error MinAmount();
+ZeroAmount
+Error thrown when amount is zero
+
+Copy
+error ZeroAmount();
+FeeTooHigh
+Error thrown when fee is set too high
+
+Copy
+error FeeTooHigh();
+AccessDenied
+Error thrown when caller doesn't have required access
+
+Copy
+error AccessDenied();
+NoFeesToClaim
+Error thrown when there are no fees to claim
+
+Copy
+error NoFeesToClaim();
+NotBeneficiary
+Error thrown when caller is not the beneficiary
+
+Copy
+error NotBeneficiary();
+ZeroDebtSupply
+Error thrown when debt supply is zero
+
+Copy
+error ZeroDebtSupply();
+AuctionIsOngoing
+Error thrown when auction is currently ongoing
+
+Copy
+error AuctionIsOngoing();
+ZeroLeverageSupply
+Error thrown when leverage supply is zero
+
+Copy
+error ZeroLeverageSupply();
+CallerIsNotAuction
+Error thrown when caller is not the auction contract
+
+Copy
+error CallerIsNotAuction();
+DistributionPeriod
+Error thrown when distribution period is invalid
+
+Copy
+error DistributionPeriod();
+AuctionPeriodPassed
+Error thrown when auction period has passed
+
+Copy
+error AuctionPeriodPassed();
+AuctionNotSucceeded
+Error thrown when auction has not succeeded
+
+Copy
+error AuctionNotSucceeded();
+AuctionAlreadyStarted
+Error thrown when auction has already started
+
+Copy
+error AuctionAlreadyStarted();
+LiquidationThresholdTooLow
+Error thrown when liquidation threshold is set too low
+
+Copy
+error LiquidationThresholdTooLow();
+DistributionPeriodNotPassed
+Error thrown when distribution period has not passed yet
+
+Copy
+error DistributionPeriodNotPassed();
+Structs
+PoolInfo
+Struct containing information about the pool's current state.
+
+Copy
+struct PoolInfo {
+    uint256 fee;
+    uint256 reserve;
+    uint256 bondSupply;
+    uint256 levSupply;
+    uint256 sharesPerToken;
+    uint256 currentPeriod;
+    uint256 lastDistribution;
+    uint256 distributionPeriod;
+    uint256 auctionPeriod;
+    address feeBeneficiary;
+}
+Enums
+TokenType
+Enum representing the types of tokens that can be created or redeemed.
+
+Copy
+enum TokenType {
+    BOND,
+    LEVERAGE
+}

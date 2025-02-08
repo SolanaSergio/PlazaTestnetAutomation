@@ -1,0 +1,13 @@
+Claiming Coupons
+Receiving USDC for holding bondETH
+
+At every coupon distribution period, users may claim their owed coupons. In the first released ETH LST/LRT pool, coupons are distributed at a rate of 2.5 USDC per bond per quarter. The holder of bondETH at the time of coupon distribution is entitled to the distribution, even if they subsequently sold the bondETH. Once a distribution occurs, a bondETH holder may claim their coupons at any point, whether they still hold the bond tokens or not.
+
+Coupon Claiming Flow
+Bondholders may claim their coupons at any time after a distribution period has occurred as long as they have held the bond at the exact time that the distributions happened. If a user has transferred the tokens away after a coupon has been distributed and/or has not claimed previous coupon distributions, they are still eligible to claim them at any time. The calculating mechanism for historical holdings is explained in detail here.
+
+
+Previous
+Redeem (Sell)
+Next
+Coupon Distributions

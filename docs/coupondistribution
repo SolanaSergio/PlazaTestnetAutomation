@@ -1,0 +1,39 @@
+Coupon Distributions
+Distributing USDC to bondETH holders
+
+Periodic Distribution Flow
+After the total outstanding coupon amount for the period has been generated and the period time has elapsed, the distribution method is called in the Pool contract, which sends the total coupon amount to the distributor contract. From there, the bondholders are able to claim their owed debt coupon.
+
+
+Plaza may distribute asset coupons to a large number of users at scale proportionately to their holdings of bondETH at a certain point in time. Naive distribution methods like individually sending assets to each of the bondholders upon a new coupon distribution are infeasible due to time and gas constraints at scale. To avoid processing a large number of balances and performing individual sends at every distribution, Plaza employs a checkpointing mechanism to determine how many bonds each holder held at the distribution time, which allows for a maximum time complexity of O(1) at each distribution. Distributing simply allows the pool to send the total amount of USDC at distribution time, and users may claim their shares at any point thereafter.
+
+Checkpointing
+Checkpointing is a function that tracks the holdings of each user during specific coupon distribution periods to account for outstanding coupons. It determines which period the asset has been transferred in and tallies up all of the unclaimed coupons for each period. Therefore, there is always a running record of each holder and the distribution period that they have held at. Thus, when a distribution occurs and the period increases, there is still evidence that the user was holding a bond in previous periods and the user will be eligible to claim previous coupons from the Distributor. Furthermore, this allows a user to claim a debt coupon even after they have transferred the bond away from their wallet. This is critical because if a user held a bond at the coupon date, didn't claim the coupon, and sold the asset, the user is still entitled to that coupon, a structure familiar to bond investors in traditional finance. The mechanism for checkpointing is displayed below.
+
+
+Every time a user transfers a bond token, the protocol updates the balances for that period and tallies up the amounts for all the periods since the user has completed the last action, including transfers and claims. Below is an example:
+
+Ollie purchases a bond at the start of the year in the first distribution period. Upon purchase and transfer into Ollie’s wallet, the bond contract notes down the distribution period in which the transfer occurred. The period is 1.
+
+Ollie has been holding this bond token for the past 4 periods. Each period corresponds to a quarter of a year. For each of these quarterly periods, the pool has distributed 2.5 USDC. The amount of USDC distributed per period is noted down in the bond contract. However, Ollie does not yet claim.
+
+While Ollie has still not claimed the asset, he has decided to sell the bond on Uniswap, triggering a Sell event noted by the contract. The bond contract updates the owed coupon amount in Ollie’s account through the following process:
+
+The contract checks the amount of coupons outstanding since the last time an action was taken. Since Ollie’s last bond balance change was when he purchased the bond for the first time, this amount is 0.
+
+The contract then runs through the list of previous distribution periods and tallies the coupon amount at each. Since each period distributed 2.5USDC, Ollie has held 1 bond throughout this time, and there have been 4 distributions/periods, the total amount owed is now up to 10 USDC.
+
+The contract finally updates the last calculation time to the current time and sets 10 USDC as the owed amount. Ollie is able to come back and claim this amount at any point in the future.
+
+Ollie can now claim the asset at any point, which would prompt the distributor to reference the owed amount from within the bond contract before sending the required amount to him.
+
+Below is some code describing the mechanism at each bond transfer:
+
+Copy
+for (uint256 i = userPool.lastUpdatedPeriod; i < period; i++) {
+  shares += (balance * globalPool.previousPoolAmounts[i].sharesPerToken).toBaseUnit(SHARES_DECIMALS);
+}
+
+userAssets[user].indexedAmountShares = shares;
+userAssets[user].lastUpdatedPeriod = period;
+Whoever holds the bond token at the time of distribution is owed the debt coupon until they claim. Transferring the bond coupon to another holder will not change the coupon obligation whatsoever. Coupon obligations are not tradable.

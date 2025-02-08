@@ -1,0 +1,34 @@
+Coupon Auction
+Generating USDC for bondETH holder coupon payments
+
+The auction is a process where participants bid USDC to acquire underlying pool assets like wstETH from a pool over a specified time frame, typically 10 days. During the auction, bidders submit their offers in USDC, competing for a portion of the pool's ETH. The auction contract tracks each bid, ensuring that all bids are recorded and accounted for.
+
+Auction Flow
+
+To understand how this system works, let’s walk through the process of how users participate in the auction and how the distribution of ETH related pool assets and USDC works, similar to the transfer and tracking of bond tokens:
+
+A new auction is created, and the system sets a 10-day period for participants to bid for ETH related assets using USDC. A portion of the underlying assets (like wstETH) in the pool are made available for bidding, not to exceed 95% percent of the value of the pool.
+
+During the auction period, bidders place their bids specifying the quantity of USDC they are willing to pay and the quantity of ETH related pool assets they are willing to receive. The bidder deposits the USDC required to fulfill the bid into a contract. Each bid has an explicit size and implicit price of ETH asset for USDC. Each bid is portioned into slots, which represent a multiple of the minimum bid amount. The auction contract records each bid placed and the USDC amount offered. The contract tracks the total amount of bids made by each bidder. If all of the bid slots are filled, newer bids kick the lowest bids out of the queue, and losing bidders may reclaim their original bid amount without loss.
+
+Once the 10-day auction ends, the auction contract finalizes the results. At this point, the contract tallies up the bids and calculates the winning bids based on the amount of USDC each user has submitted. The auction contract then proceeds to settle the results. The USDC from the winning bids is transferred into the pool to be readied for distribution.
+
+After the auction is completed, the pool allocates the corresponding amount of ETH related assets to the winning bidders. The contract keeps track of how much ETH each user has won based on the amount of USDC they bid. For example, if a user wins 5 ETH in the auction, the pool allocates that amount within the contract for the user to claim.
+
+The bidders can now claim the ETH they won from the auction. The claim process triggers the auction contract to release the correct amount of ETH related assets that each user is entitled to. For instance, if a user bid 100 USDC and won 2 ETH, they can claim these tokens at any point after the auction is finalized.
+
+Once the auction is fully processed, the USDC collected from the winning bids is transferred to the pool, and then subsequently to a distribution contract. This contract is responsible for distributing the USDC to the bondETH holders.
+
+Bid Slots
+In this auction, each bid is divided into slots, with each slot representing a multiple of USDC. The slots are essentially standardized units of bidding, tied to a minimum amount of USDC required to participate. Instead of bidding a random amount of USDC, every bid is structured around these slots, where each slot corresponds to a fixed fraction of USDC known as the "minimum bid amount."
+
+For instance, if the minimum bid for a slot is set at 100 USDC, and a user wants to bid 500 USDC, this bid would be broken down into 5 slots. Each slot represents a share of the total USDC needed in the auction, with the slot system ensuring that bids are consistently structured and measured.
+
+As the auction proceeds, the system tracks how many slots each participant bids on. For example, if a user submits 1000 USDC and the minimum bid per slot is 100 USDC, that bid equates to 10 slots. Once the auction ends, the system calculates how many slots each participant has successfully won based on the overall demand and other bids.
+
+At the end of the auction, each winning bidder is awarded ETH related asset for the slots they won - this quantity is based on their bid scaled for how much they are actually being filled if that amount is smaller than their total bid. If the participant's bid of 10 slots results in winning 6 slots after the auction closes, they would receive a portion of ETH related assets proportional to those 6 slots.
+
+This slot-based system provides a clear structure for participants to understand how their bids relate to the minimum bid requirement and how much ETH they might win. It also ensures that the ETH is distributed fairly and proportionately based on the number of slots successfully acquired in the auction, and allows the protocol to overcome block size limitations when tallying bids.
+
+Refer to the image below, referenced from Gnosis’ EasyAuction contracts to better understand how the slotting mechanism works. The initial version of the auctioning system splits the available USDC the protocol needs to acquire into 1,000 equal slots.
+

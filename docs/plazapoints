@@ -1,0 +1,185 @@
+Plaza Points (PP)
+Plaza Points (PP) Overview
+The Plaza Preseason Points Program rewards users for engaging with the platform and community.
+
+The Plaza Preseason Points Program is designed to reward users for engaging with the platform and participating in various activities. The program offers a mix of action-based, social media, and community participation incentives to encourage long-term usage and platform engagement. At the end of each season, points are snapshotted and reset, giving everyone a fresh start to earn points and get rewarded.
+
+Disclaimer
+To ensure fairness and maintain the integrity of the protocol, each user is strictly limited to the use of one wallet per person. Attempts to exploit the system by using multiple wallets, also known as Sybil attacks, are prohibited and will result in disqualification from receiving rewards and possible suspension from the platform. Plaza reserves the right to detect and remove points from anyone caught abusing the system.
+
+Action Incentives
+Action Incentives are based on protocol usage on the webapp. These refresh daily at 00:00 UTC, so make sure to come back often to collect your daily points reward!
+
+Action
+Description
+Points
+Create
+
+Create a bond or leverage token using the underlying faucet token. The amount of tokens created does not have an effect on the amount of points rewarded. A point is given for each token type created. The transaction itself is what counts.
+
+4 points / day / token type (levETH and bondETH)
+
+Up to 8 points per day
+
+Redeem
+
+Redeem a bond back to the underlying ETH or into USDC via the UI. Again, the amount of tokens created does not have an effect on the amount of points rewarded. A point is given for each token type created. The transaction itself is what counts.
+
+4 points / day / token type (levETH and bondETH)
+
+Up to 8 points per day
+
+Claim Coupon
+
+Claim a USDC coupon for holding bondETH. The amount of coupons received is driven by bondETH tokens held and does not have an effect on the amount of points rewarded. The claim transaction itself is what counts.
+
+4 points / claim / day  
+
+Up to 4 points per day
+
+Social Media Incentives (Guild.xyz)
+Social Media Incentives are based on connecting your account to Plaza's socials. To qualify for the rewards, complete the tasks in the Guild. Stay tuned for engagement-based social media incentives.
+
+Action
+Description
+Points / Multiplier
+Connect Discord
+
+Connect Discord and verify via our server’s captcha.
+
++ 10% of future points accrued
+
+Connect Twitter/X
+
+Connect to Twitter and follow @plaza_finance.
+
++ 10% of future points accrued.
+
+Connect Email
+
+Connect email and agree to marketing terms.
+
++ 10% of future points accrued.
+
+Connect Farcaster
+
+Connect to Farcaster and follow @plazafinance.
+
++ 10% of future points accrued.
+
+Boost Discord
+
+Boost the Discord server.
+
++ 50 points
+
+Discord Level Up
+
+Increase your Discord level by participating in discussions.
+
++0.1% of future points accrued for each level earned.
+
+Community Participation Incentives
+Plaza hosts many community initiatives, all of which are included in the Community Participation Incentives. Keep an eye out on Twitter/X and Discord for more information on how to participate.
+
+Action
+Description
+Points / Multiplier
+Game Win
+
+Win a game or competitive live event, at mod’s discretion.
+
+ 100 points
+
+Contest Win
+
+Win a content contest for the week, judged by the mods.
+
+250 points
+
+Quests
+
+TBD
+
+TBD
+
+Plaza Referral Program
+The Plaza Referral Program rewards users for growing the Plaza community by inviting their friends. Referring a user entitles the referrer to a percentage of the points earned by the referree in future seasons. The points are additive - they do not subtract from the person you refer.  In the Pre-Season, users only earn points through testnet actions and game wins. Referrals do not accrue points in the Pre-Season. This keeps the points system fair in the Pre-Season and ensures early users get rewarded for their contribution to the Plaza. 
+
+Plaza Levels Program
+The Plaza Levels Program rewards users for their engagement and participation on the platform, offering exciting rewards such as exclusive NFTs, Discord roles, and merchandise to those who accrue points. As you accumulate points through daily activities, social engagement, and competition wins, you advance through levels, unlocking new rewards at each stage. At the end of each season, levels are reset, giving everyone a fresh start to compete and climb the levels again. Once levels refresh, new seasons bring fresh opportunities to claim additional rewards, including new NFTs, limited-edition merchandise, and roles.
+
+Rewards Overview:
+NFTs: Collect exclusive NFTs as you progress through levels. These digital collectibles increase in rarity and value as you advance.
+
+Discord Roles: Unlock special Discord roles at various levels, granting you access to exclusive community channels, events, and perks.
+
+Merchandise: At higher levels, earn NFTs that can be redeemed for physical merchandise like T-shirts, hats, hoodies, and more. You can claim the merch immediately or hold the NFT to redeem at any time in the future.
+
+Level
+Points Needed
+Reward(s)
+Notes
+1
+
+50
+
+Basic NFT (Plaza Collectible)
+
+Easy entry-level reward for casual engagement.
+
+2
+
+100
+
+Discord Role: "Points Dabbler (100 Points)"
+
+Role to signify new community members.
+
+3
+
+200
+
+NFT Badge: "200"
+
+Recognition for early users or contributors.
+
+4
+
+300
+
+Access to Exclusive Discord Channel
+
+Private channel for more engaged users.
+
+5
+
+500
+
+NFT: "500"
+
+Higher-quality NFT for continued engagement.
+
+6
+
+750
+
+Discord Role: "Preseason Executive (750)"
+
+Status upgrade in Discord community.
+
+7
+
+1,000
+
+Special Edition NFT (Preseason Completionist)
+
+Exclusive digital asset with potential for upgrades.
+
+8
+
+1,500
+
+Discord Role: "Unattainable (1,500 points preseason)"
+
+Elevated role within the community with more privileges.

@@ -1,0 +1,590 @@
+Auction
+This contract manages the coupon auctions that the pool uses to sell the underlying ETH in exchange for USDC. It is not yet deployed on testnet.
+
+State Variables
+pool
+Pool contract associated with the auction
+
+Copy
+address public pool;
+beneficiary
+Auction beneficiary, usually the pool contract
+
+Copy
+address public beneficiary;
+buyCouponToken
+Auction buy coupon token
+
+Copy
+address public buyCouponToken;
+sellReserveToken
+Auction sell reserve token
+
+Copy
+address public sellReserveToken;
+endTime
+Auction end time
+
+Copy
+uint256 public endTime;
+totalBuyCouponAmount
+Total buy coupon amount
+
+Copy
+uint256 public totalBuyCouponAmount;
+liquidationThreshold
+Liquidation threshold
+
+Copy
+uint256 public liquidationThreshold;
+state
+Auction state, either BIDDING, SUCCEEDED, FAILED_UNDERSOLD, or FAILED_LIQUIDATION
+
+Copy
+State public state;
+bids
+Mapping to store all bids by their index
+
+Copy
+mapping(uint256 => Bid) public bids;
+bidCount
+Total number of bids
+
+Copy
+uint256 public bidCount;
+lastBidIndex
+Index of the last bid
+
+Copy
+uint256 public lastBidIndex;
+highestBidIndex
+The index of the highest bid in the sorted list
+
+Copy
+uint256 public highestBidIndex;
+maxBids
+MaxBids
+
+Copy
+uint256 public maxBids;
+lowestBidIndex
+Index of the lowest bid
+
+Copy
+uint256 public lowestBidIndex;
+currentCouponAmount
+Aggregated buy amount (coupon) for the auction
+
+Copy
+uint256 public currentCouponAmount;
+totalSellReserveAmount
+Aggregated sell amount (reserve) for the auction
+
+Copy
+uint256 public totalSellReserveAmount;
+Functions
+constructor
+Note: oz-upgrades-unsafe-allow: constructor
+
+Copy
+constructor();
+initialize
+Initializes the Auction contract.
+
+Copy
+function initialize(
+    address _buyCouponToken,
+    address _sellReserveToken,
+    uint256 _totalBuyCouponAmount,
+    uint256 _endTime,
+    uint256 _maxBids,
+    address _beneficiary,
+    uint256 _liquidationThreshold
+) public initializer;
+Parameters
+
+Name
+Type
+Description
+_buyCouponToken
+
+address
+
+The address of the buy token (coupon).
+
+_sellReserveToken
+
+address
+
+The address of the sell token (reserve).
+
+_totalBuyCouponAmount
+
+uint256
+
+The total amount of buy tokens (coupon) for the auction.
+
+_endTime
+
+uint256
+
+The end time of the auction.
+
+_maxBids
+
+uint256
+
+The maximum number of bids allowed in the auction.
+
+_beneficiary
+
+address
+
+The address of the auction beneficiary.
+
+_liquidationThreshold
+
+uint256
+
+The percentage threshold for liquidation (e.g. 95000 = 95%).
+
+bid
+Places a bid on a portion of the pool.
+
+Copy
+function bid(uint256 buyReserveAmount, uint256 sellCouponAmount) external auctionActive returns (uint256);
+Parameters
+
+Name
+Type
+Description
+buyReserveAmount
+
+uint256
+
+The amount of buy tokens (reserve) to bid.
+
+sellCouponAmount
+
+uint256
+
+The amount of sell tokens (coupon) to bid.
+
+Returns
+
+Name
+Type
+Description
+<none>
+
+uint256
+
+The index of the bid.
+
+insertSortedBid
+Inserts the bid into the linked list based on the price (buyAmount/sellAmount) in descending order, then by sellAmount.
+
+Copy
+function insertSortedBid(uint256 newBidIndex) internal;
+Parameters
+
+Name
+Type
+Description
+newBidIndex
+
+uint256
+
+The index of the bid to insert.
+
+removeExcessBids
+Removes excess bids from the auction.
+
+Copy
+function removeExcessBids() internal;
+_removeBid
+Removes a bid from the linked list.
+
+Copy
+function _removeBid(uint256 bidIndex) internal;
+Parameters
+
+Name
+Type
+Description
+bidIndex
+
+uint256
+
+The index of the bid to remove.
+
+endAuction
+Ends the auction and transfers the reserve to the auction.
+
+Copy
+function endAuction() external auctionExpired;
+claimBid
+Claims the tokens for a winning bid.
+
+Copy
+function claimBid(uint256 bidIndex) external auctionExpired auctionSucceeded;
+Parameters
+
+Name
+Type
+Description
+bidIndex
+
+uint256
+
+The index of the bid to claim.
+
+claimRefund
+Claims a refund for a bid in a failed auction.
+
+Copy
+function claimRefund(uint256 bidIndex) external auctionExpired auctionFailed;
+Parameters
+
+Name
+Type
+Description
+bidIndex
+
+uint256
+
+The index of the bid to claim a refund for.
+
+slotSize
+Returns the size of a bid slot.
+
+Copy
+function slotSize() internal view returns (uint256);
+Returns
+
+Name
+Type
+Description
+<none>
+
+uint256
+
+uint256 The size of a bid slot.
+
+auctionActive
+Modifier to check if the auction is still active.
+
+Copy
+modifier auctionActive();
+auctionExpired
+Modifier to check if the auction has expired.
+
+Copy
+modifier auctionExpired();
+auctionSucceeded
+Modifier to check if the auction succeeded.
+
+Copy
+modifier auctionSucceeded();
+auctionFailed
+Modifier to check if the auction has failed. This happens if the auction didn't succeed to generate enough coupon tokens or the amount of reserve tokens sold exceeds the allowed threshold.
+
+Copy
+modifier auctionFailed();
+onlyRole
+Modifier to check if the caller has the specified role.
+
+Copy
+modifier onlyRole(bytes32 role);
+Parameters
+
+Name
+Type
+Description
+role
+
+bytes32
+
+The role to check for.
+
+_authorizeUpgrade
+Authorizes an upgrade to a new implementation. Can only be called by the owner of the contract.
+
+Copy
+function _authorizeUpgrade(address newImplementation)
+    internal
+    override
+    onlyRole(PoolFactory(Pool(pool).poolFactory()).GOV_ROLE());
+Parameters
+
+Name
+Type
+Description
+newImplementation
+
+address
+
+Address of the new implementation
+
+Events
+AuctionEnded
+Auction ended event
+
+Copy
+event AuctionEnded(State state, uint256 totalSellReserveAmount, uint256 totalBuyCouponAmount);
+Parameters
+
+Name
+Type
+Description
+state
+
+State
+
+Auction state
+
+totalSellReserveAmount
+
+uint256
+
+Total sell reserve amount. The amount of reserve tokens sold by the protocol during the auction.
+
+totalBuyCouponAmount
+
+uint256
+
+Total buy coupon amount. The amount of coupon tokens bought by the protocol from the bidders during the auction.
+
+BidRefundClaimed
+Bid refund claimed event
+
+Copy
+event BidRefundClaimed(uint256 bidIndex, address indexed bidder, uint256 sellCouponAmount);
+Parameters
+
+Name
+Type
+Description
+bidIndex
+
+uint256
+
+Index of the bid
+
+bidder
+
+address
+
+Address of the bidder
+
+sellCouponAmount
+
+uint256
+
+Amount of bid coupon tokens refunded to the bidder
+
+BidClaimed
+Bid claimed event
+
+Copy
+event BidClaimed(uint256 indexed bidIndex, address indexed bidder, uint256 sellCouponAmount);
+Parameters
+
+Name
+Type
+Description
+bidIndex
+
+uint256
+
+Index of the bid
+
+bidder
+
+address
+
+Address of the bidder
+
+sellCouponAmount
+
+uint256
+
+Amount of bid coupon tokens claimed by the bidder
+
+BidPlaced
+Bid placed event
+
+Copy
+event BidPlaced(uint256 indexed bidIndex, address indexed bidder, uint256 buyReserveAmount, uint256 sellCouponAmount);
+Parameters
+
+Name
+Type
+Description
+bidIndex
+
+uint256
+
+Index of the bid
+
+bidder
+
+address
+
+Address of the bidder
+
+buyReserveAmount
+
+uint256
+
+Amount of bid reserve tokens
+
+sellCouponAmount
+
+uint256
+
+Amount of bid coupon tokens
+
+BidRemoved
+Bid removed event
+
+Copy
+event BidRemoved(uint256 indexed bidIndex, address indexed bidder, uint256 buyReserveAmount, uint256 sellCouponAmount);
+Parameters
+
+Name
+Type
+Description
+bidIndex
+
+uint256
+
+Index of the bid
+
+bidder
+
+address
+
+Address of the bidder
+
+buyReserveAmount
+
+uint256
+
+Amount of bid reserve tokens
+
+sellCouponAmount
+
+uint256
+
+Amount of bid coupon tokens
+
+BidReduced
+Bid reduced event
+
+Copy
+event BidReduced(uint256 indexed bidIndex, address indexed bidder, uint256 buyReserveAmount, uint256 sellCouponAmount);
+Parameters
+
+Name
+Type
+Description
+bidIndex
+
+uint256
+
+Index of the bid
+
+bidder
+
+address
+
+Address of the bidder
+
+buyReserveAmount
+
+uint256
+
+Amount of bid reserve tokens
+
+sellCouponAmount
+
+uint256
+
+Amount of bid coupon tokens
+
+Errors
+AccessDenied
+Access denied error
+
+Copy
+error AccessDenied();
+AuctionFailed
+Auction failed error
+
+Copy
+error AuctionFailed();
+NothingToClaim
+Nothing to claim error
+
+Copy
+error NothingToClaim();
+AlreadyClaimed
+Already claimed error
+
+Copy
+error AlreadyClaimed();
+AuctionHasEnded
+Auction has ended error
+
+Copy
+error AuctionHasEnded();
+AuctionNotEnded
+Auction not ended error
+
+Copy
+error AuctionNotEnded();
+BidAmountTooLow
+Bid amount too low error
+
+Copy
+error BidAmountTooLow();
+InvalidSellAmount
+Invalid sell amount error
+
+Copy
+error InvalidSellAmount();
+AuctionStillOngoing
+Auction still ongoing error
+
+Copy
+error AuctionStillOngoing();
+AuctionAlreadyEnded
+Auction already ended error
+
+Copy
+error AuctionAlreadyEnded();
+Structs
+Bid
+Bid struct
+
+Copy
+struct Bid {
+    address bidder;
+    uint256 buyReserveAmount;
+    uint256 sellCouponAmount;
+    uint256 nextBidIndex;
+    uint256 prevBidIndex;
+    bool claimed;
+}
+Enums
+State
+Auction state
+
+Copy
+enum State {
+    BIDDING,
+    SUCCEEDED,
+    FAILED_UNDERSOLD,
+    FAILED_LIQUIDATION
+}

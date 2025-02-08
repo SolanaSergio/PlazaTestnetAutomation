@@ -1,0 +1,44 @@
+Addresses
+Deployed Base Sepolia contract addresses for Plaza.
+
+Below is a list of all the core Plaza contracts and their corresponding addresses on Base Sepolia Testnet. As the testnet upgrades and evolves, new addresses will be added.
+
+Core Contracts
+
+Contract
+Address
+Distributor
+
+0xb01866F195533dE16EB929b73f87280693CA0cB4
+
+Pool Factory
+
+0xb9b23c2b1dc99181402e4399a45404d368e864fc
+
+Pool
+
+0xF39635F2adF40608255779ff742Afe13dE31f577
+
+BondETH
+
+0x5Bd36745f6199CF32d2465Ef1F8D6c51dCA9BdEE
+
+LevETH
+
+0x98f665D98a046fB81147879eCBE9A6fF68BC276C
+
+Testing Contracts
+
+Faucet
+0x507052dac8d27e1469e723bd428c4c7ea33b3031
+Faucet USDC
+
+0xf7464321de37bde4c03aaeef6b1e7b71379a9a64
+
+Faucet wstETH
+
+0x13e5fb0b6534bb22cbc59fae339dbbe0dc906871
+
+MockRouter
+
+0xad61d4e5a5c226298549632ffe9998b738865471

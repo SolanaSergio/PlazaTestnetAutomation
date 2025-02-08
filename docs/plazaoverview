@@ -1,0 +1,25 @@
+Plaza Overview
+Plaza is a platform for on-chain bonds and leverage on Base.
+
+Plaza is a platform for programmable derivatives built as a set of Solidity smart contracts on Base. It offers two core products: bondETH and levETH, which are programmable derivatives of a pool of ETH liquid staking derivatives (LSTs) and liquid restaking derivatives (LRTs) such as wstETH. Users can deposit an underlying pool asset like wstETH and receive levETH or bondETH in return, which are represented as ERC20 tokens. These tokens are composable with protocols such as DEXes, lending markets, restaking platforms, etc.
+
+
+bondETH and levETH represent splits of the total return of the underlying pool of ETH LSTs and LRTs, giving users access to a profile of risk and returns that better suits their needs and investment style. Plaza operates in a fully permissionless manner, with each core function of the protocol executable by anyone.
+
+Plaza has three core user functionalities in the protocol: creations, redemptions, and coupon claiming.
+
+Creations: converting a pool asset like wstETH into bondETH or levETH.
+
+Redemptions: exchanging a programmable derivative (bondETH or levETH) for an underlying pool asset like wstETH.
+
+Coupon Claiming: collecting payment in USDC for holding bondETH at the end of a coupon distribution period.
+
+Aside from the above user actions, the protocol has two additional mechanisms that aid its function—merchant auctions and distributions.
+
+Merchant Auctions: the process of selling a portion of pool assets like wstETH in exchange for USDC to distribute to the bondETH holders at each coupon distribution.
+
+Distribution: The process of distributing USDC to bondETH holders who can claim a USDC coupon payment during the distribution period.
+
+External dependencies on trusted partners:
+
+Chainlink: Chainlink Price Feeds (oracle service) are referenced each time a derivative is created or redeemed. Based on the price of underlying pool assets and programmable derivatives, and the quantity being created or redeemed, the conditional AMM determines the amount of returned asset to deliver back to the user.

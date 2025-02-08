@@ -1,0 +1,208 @@
+BalancerOracleAdapter
+This contract is an oracle that calculates the BLP price of a Balancer pool, assuming that the OracleReader has access to all the price feeds for the underlying assets.
+
+State Variables
+poolAddress
+Address of the Balancer pool this oracle adapter reads from
+
+Copy
+address public poolAddress;
+decimals
+Number of decimals used for price values returned by this oracle
+
+Copy
+uint8 public decimals;
+Functions
+constructor
+Note: oz-upgrades-unsafe-allow: constructor
+
+Copy
+constructor();
+initialize
+Initializes the BalancerOracleAdapter. This function is called once during deployment or upgrading to initialize state variables.
+
+Copy
+function initialize(address _poolAddress, uint8 _decimals, address _oracleFeeds, address _owner) external initializer;
+Parameters
+
+Name
+Type
+Description
+_poolAddress
+
+address
+
+Address of the BALANCER Pool used for the oracle.
+
+_decimals
+
+uint8
+
+Number of decimals returned by the oracle.
+
+_oracleFeeds
+
+address
+
+Address of the OracleReader feeds contract, containing the Chainlink price feeds for each asset in the pool.
+
+_owner
+
+address
+
+description
+Returns the number of decimals used by the oracle.
+
+Returns the description of the oracle.
+
+Copy
+function description() external pure returns (string memory);
+Returns
+
+Name
+Type
+Description
+<none>
+
+string
+
+uint8 The number of decimals.
+
+version
+Returns the version of the oracle.
+
+Copy
+function version() external pure returns (uint256);
+Returns
+
+Name
+Type
+Description
+<none>
+
+uint256
+
+uint256 The version.
+
+getRoundData
+Not implemented.
+
+Copy
+function getRoundData(uint80) public pure returns (uint80, int256, uint256, uint256, uint80);
+latestRoundData
+Returns the latest round data. Calls getRoundData with round ID 0.
+
+Copy
+function latestRoundData() external view returns (uint80, int256, uint256, uint256, uint80);
+Returns
+
+Name
+Type
+Description
+<none>
+
+uint80
+
+roundId The round ID. Always 0 for this oracle.
+
+<none>
+
+int256
+
+answer The price.
+
+<none>
+
+uint256
+
+startedAt The timestamp of the round.
+
+<none>
+
+uint256
+
+updatedAt The timestamp of the round.
+
+<none>
+
+uint80
+
+answeredInRound The round ID. Always 0 for this oracle.
+
+_calculateFairUintPrice
+Calculates the fair price of the pool in USD using the Balancer invariant formula: https://docs.balancer.fi/concepts/advanced/valuing-bpt/valuing-bpt.html#on-chain-price-evaluation.
+
+Copy
+function _calculateFairUintPrice(
+    uint256[] memory prices,
+    uint256[] memory weights,
+    uint256 invariant,
+    uint256 totalBPTSupply
+) internal pure returns (uint256);
+Parameters
+
+Name
+Type
+Description
+prices
+
+uint256[]
+
+Array of prices of the assets in the pool.
+
+weights
+
+uint256[]
+
+Array of weights of the assets in the pool.
+
+invariant
+
+uint256
+
+The invariant of the pool.
+
+totalBPTSupply
+
+uint256
+
+The total supply of BPT in the pool.
+
+Returns
+
+Name
+Type
+Description
+<none>
+
+uint256
+
+uint256 The fair price of the pool in USD.
+
+_authorizeUpgrade
+Function that should revert when msg.sender is not authorized to upgrade the contract. Called by {upgradeTo} and {upgradeToAndCall}.
+
+Copy
+function _authorizeUpgrade(address newImplementation) internal override onlyOwner;
+Parameters
+
+Name
+Type
+Description
+newImplementation
+
+address
+
+Address of the new implementation contract
+
+Errors
+NotImplemented
+Error thrown when calling an unimplemented function
+
+Copy
+error NotImplemented();
+PriceTooLargeForIntConversion
+Error thrown when a price value is too large to be safely converted to int256
+
+Copy
+error PriceTooLargeForIntConversion();

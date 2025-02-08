@@ -1,0 +1,80 @@
+bondETH - An Ethereum-backed Bond
+Your Gateway to Stable Yield and USDC Income in Decentralized Finance
+
+What is bondETH?
+bondETH is a bond token issued by a vault containing liquid staked and liquid restake representations of ETH (like wstETH). As a bondETH holder, you're entitled to a fixed quarterly coupon of 2.50 USDC per bondETH (10.00 USDC per bondETH per year), paid out in perpetuity. Enjoy a steady income stream while benefiting from Ethereum staking's security and growth potential.
+
+How does bondETH work?
+Creation of bondETH
+To create bondETH, deposit ETH related tokens into a smart contract vault on Plaza Finance. The creation price is determined by a conditional Automated Market Maker (cAMM) curve based on the vault's collateral level.
+
+Collateral Level Calculation
+
+Collateral Level = (Quantity of ETH related tokens in the vault  × Oracle Price of ETH related tokens in the vault ) ÷ (Quantity of bondETH outstanding × 100)
+
+If Collateral Level > 1.2: Creation Price fixed at 100 USDC per bondETH
+
+If Collateral Level ≤ 1.2: Creation Price adjusts to 80% of the vault's collateral value per bondETH
+
+Earning Coupons
+Receive 2.50 USDC every quarter for each bondETH you hold. Coupons are funded by selling a portion of the ETH related tokens in the vault in an auction.
+
+Coupon Generation Dynamics
+
+The amount of ETH related tokens in the vault sold each period is dependent on the number of bondETH outstanding, the price of ETH, and the amount of ETH related tokens in the pool.
+
+When ETH Price Rises: Fewer ETH related tokens need to be sold to meet coupon payments
+
+When ETH Price Falls: More ETH related tokens in the vault are sold to cover coupons.
+
+The vault never runs out of ETH related tokens because of two key features:
+
+Permissionless Redemptions: holders can and may redeem at any time to delever the protocol and reduce the amount of bond coupons required to be paid by the vault.
+
+If coupons exceed the value of ETH in the vault, the vault pauses coupons until the price of ETH recovers or the pool delevers to a point that supports coupons.
+
+Redemption of bondETH
+The redemption price is determined by a conditional Automated Market Maker (cAMM) curve based on the vault's collateral level. You can redeem your bondETH tokens for ETH related tokens at any time.
+
+Redemption Price Calculation
+
+Uses the same Collateral Level calculation as creation
+
+If Collateral Level > 1.2: Redemption Price is the lesser of 100 USDC or current market price of bondETH
+
+If Collateral Level ≤ 1.2: Redemption Price adjusts to 80% of vault's collateral value per bondETH or market price, whichever is lower
+
+Interplay between levETH and bondETH
+levETH is another token issued by the same vault, offering leveraged exposure to ETH. While bondETH provides stability and fixed income, levETH is designed for investors seeking higher returns through leverage without liquidation risk.
+
+Shared Vault: Both bondETH and levETH are backed by the same pool of ETH
+
+Allocation of Returns:
+
+bondETH Holders: Receive fixed USDC coupons funded by ETH sales
+
+levETH Holders: Benefit from leveraged exposure to ETH price movements
+
+Risk and Reward Balance:
+
+bondETH: Lower risk, stable returns. Protected by vault's collateral management
+
+levETH: Higher risk, potential for greater returns. Gains amplified due to leverage but exposed to greater price volatility
+
+Why Choose bondETH?
+Stable Income: Enjoy fixed, predictable income regardless of market volatility
+
+Asset-Backed: Fully backed by ETH LSTs and LRTs, combining Ethereum staking benefits with bond safety
+
+Flexibility and Control: Create and redeem bondETH at any time based on your strategy and risk tolerance
+
+Transparency: All operations are conducted by audited smart contracts on Base, ensuring trust
+
+Getting Started with bondETH
+Access Plaza Finance: Visit the platform to interact with the bondETH and levETH vault
+
+Create bondETH or levETH tokens: Choose bondETH for stable income, levETH for leveraged growth, or mix both
+
+Monitor the Vault: Stay informed about collateral levels and market prices for timely decisions… or set it and forget it <3.
+
+Disclaimer: Products like bondETH can result in significant gains or losses. Cryptocurrency investments carry risks. Please perform your own due diligence and consult with a financial advisor if necessary before investing.

@@ -1,0 +1,81 @@
+Plaza Assets
+levETH - Levered Ethereum
+Amplify Your Exposure to Ethereum with Liquidation-Free Leverage
+
+What is levETH?
+levETH is a leveraged token issued by a vault containing liquid staked and liquid restake representations of ETH (like wstETH). Designed for investors seeking higher returns, levETH offers leveraged exposure to ETH related assets without the risk of liquidation. Benefit from the growth potential of Ethereum staking with amplified gains, all while being protected from forced liquidations during market volatility.
+
+How does levETH work?
+Creation of levETH
+To create levETH, you deposit ETH related tokens into a smart contract vault on Plaza Finance. The creation price is determined by a conditional Automated Market Maker (cAMM) curve based on the vault’s collateral level.
+
+Collateral Level Calculation
+
+Collateral Level = (Quantity of ETH related tokens in the vault × Oracle Price of ETH related tokens in the vault) ÷ (Quantity of bondETH outstanding × 100)
+
+If Collateral Level > 1.2: 
+Creation Price = (Total Value of ETH related tokens in the vault - 100 × Quantity of bondETH outstanding) ÷ (Quantity of levETH outstanding)
+
+If Collateral Level ≤ 1.2: Adjusts to 20% of the vault’s collateral value per levETH
+
+Leveraged Exposure
+As a levETH holder, you are entitled to the remaining returns of the vault after bondETH obligations are met. This includes:
+
+Price Appreciation of ETH: Your gains are amplified due to leverage financed by bondETH holders and their ETH related tokens deposits.
+
+Staking Rewards: Benefit from Ethereum staking rewards after fixed coupons are paid to bondETH holders.
+
+Redemption of levETH
+The redemption price is determined by a conditional Automated Market Maker (cAMM) curve based on the vault's collateral level. You can redeem your levETH tokens for ETH related tokens at any time.
+
+Redemption Price Calculation
+
+Uses the same Collateral Level calculation as creation
+
+If Collateral Level > 1.2: Redemption Price = (Total Value of ETH related tokens in the Vault - (100 × Quantity of bondETH outstanding)) ÷ (Quantity of levETH outstanding)
+
+If Collateral Level ≤ 1.2: Adjusts to 20% of the vault’s collateral value per levETH or the market price, whichever is lower
+
+Liquidation Free
+levETH provides levered exposure to ETH price without the risk of liquidation. levETH is liquidation free because the Plaza protocol ensures there is always ETH related tokens in the pool that levETH holders can redeem their levETH for. This is maintained by the following properties of the protocol:
+
+levETH has dynamic market-set leverage: bondETH can be created and redeemed permissionless and provides the leverage to levETH by contributing ETH related tokens to the pool for a fixed return. Redemptions of bondETH in periods of market uncertainty reduce the amount of USDC the pool needs to generate from ETH related tokens sales.
+
+bondETH coupons pause under extreme market conditions: if the price of ETH falls such that a USDC coupon exceeds the value of the ETH related tokens in the pool, the protocol pauses coupons until the price of ETH recovers or amount of bondETH outstanding reduces to the point where the protocol can resume coupons.
+
+The liquidation-free nature of levETH makes it the ideal product to express a long-term bullish view on Ethereum. levETH holders may experience a mark-to-market loss if the price of ETH falls, however there will always be ETH related tokens in the pool that levETH holders are exposed to, allowing holders to experience the upside of a recovery without getting stopped out of their position as they would by expressing the bullish view through perpetual futures.
+
+Interplay between levETH and bondETH
+levETH is another token issued by the same vault, offering leveraged exposure to ETH. While bondETH provides stability and fixed income, levETH is designed for investors seeking higher returns through leverage without liquidation risk.
+
+Shared Vault: Both bondETH and levETH are backed by the same pool of ETH related tokens
+
+Allocation of Returns:
+
+bondETH Holders: Receive fixed USDC coupons funded by ETH related token sales
+
+levETH Holders: Benefit from leveraged exposure to ETH price movements
+
+Risk and Reward Balance:
+
+bondETH: Lower risk, stable returns. Protected by the vault's collateral management
+
+levETH: Higher risk, potential for greater returns. Gains amplified due to leverage but exposed to greater price volatility
+
+Why Choose levETH?
+Leverage Without Liquidation: Amplify your exposure to Ethereum’s growth without the fear of forced liquidation.
+
+Asset-Backed: Fully backed by ETH LSTs and LRTs, combining Ethereum staking benefits with bond safety
+
+Flexibility and Control: Create and redeem levETH at any time based on your strategy and risk tolerance
+
+Transparency: All operations are conducted by audited smart contracts on Base, ensuring trust
+
+Getting Started with levETH
+Access Plaza Finance: Visit the platform to interact with the bondETH and levETH vault
+
+Create bondETH or levETH tokens: Choose bondETH for stable income, levETH for leveraged growth, or mix both
+
+Monitor the Vault: Stay informed about collateral levels and market prices for timely decisions… or set it and forget it <3.
+
+Disclaimer: Products like levETH can result in significant gains or losses. Cryptocurrency investments carry risks. Please perform your own due diligence and consult with a financial advisor if necessary before investing.

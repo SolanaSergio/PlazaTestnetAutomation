@@ -1,0 +1,26 @@
+Create (Buy)
+Creating programmable derivatives on Plaza Finance
+
+To create levETH or bondETH, users provide the Plaza Pool with an underlying pool asset, say wstETH, in exchange for either bondETH or levETH as specified by the user. Creations are denoted as a Buy on the Plaza UI. The Plaza Pool calculates the issuance rate for each token based on the following formulas:
+
+Creation of bondETH
+The creation price is determined by a conditional Automated Market Maker (cAMM) curve based on the vault's collateral level.
+
+Collateral Level = (Quantity of ETH related tokens in the vault × Oracle Price of ETH related tokens) ÷ (Quantity of bondETH outstanding × 100)
+
+If Collateral Level > 1.2: Creation Price fixed at 100 USDC per bondETH
+
+If Collateral Level ≤ 1.2: Creation Price adjusts to 80% of the vault's collateral value per bondETH
+
+Creation of levETH
+To create levETH, users deposit wstETH into a smart contract vault on Plaza Finance. The creation price is determined by a conditional Automated Market Maker (cAMM) curve based on the vault’s collateral level.
+
+Collateral Level = (Quantity of ETH related tokens in the vault × Oracle Price of ETH related tokens) ÷ (Quantity of bondETH outstanding × 100)
+
+If Collateral Level > 1.2: Creation Price = (Total Value of ETH related tokens in the Vault - (100 × Quantity of bondETH outstanding)) ÷ (Quantity of levETH outstanding)
+
+If Collateral Level ≤ 1.2: Adjusts to 20% of the vault’s collateral value per levETH
+
+Create Flow
+Below is an example of the create flow showing the interactions between the pool, the oracle, and the token contracts.
+
